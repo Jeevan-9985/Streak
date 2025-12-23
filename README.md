@@ -2,6 +2,10 @@
 
 A clean, minimal streak maintenance web application for tracking habits and challenges.
 
+## 🌐 Live Demo
+
+**[https://jeevan-9985.github.io/Streak/](https://jeevan-9985.github.io/Streak/)**
+
 ## Features
 
 - ✅ User authentication (email + password)
@@ -64,6 +68,21 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:5173`
+
+## Deployment
+
+The app is configured for automatic deployment to GitHub Pages. To deploy:
+
+1. Go to your repository Settings → Pages
+2. Set Source to "GitHub Actions"
+3. Add your Firebase credentials as repository secrets:
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
+4. Push to main branch or manually trigger the workflow
 
 ## How Streaks Work
 
