@@ -14,7 +14,7 @@ import AddStreakModal from '../components/AddStreakModal';
 import toast from 'react-hot-toast';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, isDemo } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const [streaks, setStreaks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +81,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      {/* Demo Mode Banner */}
+      {isDemo && (
+        <div className="bg-yellow-500 text-yellow-900 text-center py-2 px-4 text-sm font-medium">
+          📦 Demo Mode - Data stored locally in your browser
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
