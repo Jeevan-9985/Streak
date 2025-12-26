@@ -3,9 +3,13 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import FirebaseErrorScreen from './components/FirebaseErrorScreen';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import { isFirebaseConfigured } from './services/firebase';
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
@@ -29,6 +33,11 @@ function PublicRoute({ children }) {
 }
 
 function AppRoutes() {
+  // Show Firebase error screen if Firebase is not configured
+  if (!isFirebaseConfigured) {
+    return <FirebaseErrorScreen />;
+  }
+
   return (
     <Routes>
       <Route 
@@ -36,6 +45,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         } 
       />
@@ -52,6 +69,14 @@ function AppRoutes() {
         element={
           <PublicRoute>
             <Signup />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/forgot-password" 
+        element={
+          <PublicRoute>
+            <ForgotPassword />
           </PublicRoute>
         } 
       />

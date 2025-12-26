@@ -1,6 +1,11 @@
+import { motion } from 'framer-motion';
+
 export default function StreakCard({ streak, isCompletedToday, onMarkDone, onUndo, onDelete }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all hover:shadow-lg">
+    <motion.div
+      layout
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all hover:shadow-lg"
+    >
       <div className="flex items-start justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 break-words pr-2">
           {streak.title}
@@ -17,39 +22,60 @@ export default function StreakCard({ streak, isCompletedToday, onMarkDone, onUnd
       </div>
 
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-4xl font-bold text-orange-500">
+        <motion.span
+          key={streak.currentStreak}
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          className="text-4xl font-bold text-orange-500"
+        >
           {streak.currentStreak}
-        </span>
+        </motion.span>
         <span className="text-gray-600 dark:text-gray-400">
           day{streak.currentStreak !== 1 ? 's' : ''} 🔥
         </span>
       </div>
 
+      {/* Best Streak */}
+      {streak.longestStreak > 0 && (
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          🏆 Best: {streak.longestStreak} days
+        </div>
+      )}
+
       <div className="flex gap-2">
         {isCompletedToday ? (
           <>
-            <button
+            <motion.button
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
               disabled
-              className="flex-1 py-2 px-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium rounded-lg cursor-not-allowed"
+              className="flex-1 py-2 px-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
             >
-              ✓ Done Today
-            </button>
-            <button
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Done Today
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onUndo}
               className="py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             >
               Undo
-            </button>
+            </motion.button>
           </>
         ) : (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onMarkDone}
             className="flex-1 py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition"
           >
-            Mark Done
-          </button>
+            Mark Done ✓
+          </motion.button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

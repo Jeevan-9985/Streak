@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -18,6 +18,7 @@ export const isFirebaseConfigured = Boolean(
   !firebaseConfig.apiKey.includes('your_')
 );
 
+// Initialize Firebase - always initialize, show error screen if not configured
 let app = null;
 let auth = null;
 let db = null;
@@ -26,6 +27,16 @@ if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
+}
+
+/**
+ * Send password reset email
+ */
+export async function resetPassword(email) {
+  if (!auth) {
+    throw new Error('Firebase is not configured');
+  }
+  return sendPasswordResetEmail(auth, email);
 }
 
 export { auth, db };
