@@ -69,17 +69,26 @@ export function calculateCurrentStreak(completedDates) {
 export function calculateLongestStreak(completedDates) {
   if (!completedDates || completedDates.length === 0) return 0;
   
-  const sortedDates = [...completedDates].sort();
+  // Remove duplicates and sort
+  const uniqueDates = [...new Set(completedDates)].sort();
+  
+  if (uniqueDates.length === 0) return 0;
+  if (uniqueDates.length === 1) return 1;
+  
   let longestStreak = 1;
   let currentStreak = 1;
   
-  for (let i = 1; i < sortedDates.length; i++) {
-    const prevDate = new Date(sortedDates[i - 1]);
-    const currDate = new Date(sortedDates[i]);
+  for (let i = 1; i < uniqueDates.length; i++) {
+    // Parse dates as local dates (YYYY-MM-DD format)
+    const [prevYear, prevMonth, prevDay] = uniqueDates[i - 1].split('-').map(Number);
+    const [currYear, currMonth, currDay] = uniqueDates[i].split('-').map(Number);
     
-    // Calculate difference in days
+    const prevDate = new Date(prevYear, prevMonth - 1, prevDay);
+    const currDate = new Date(currYear, currMonth - 1, currDay);
+    
+    // Calculate difference in days using UTC to avoid DST issues
     const diffTime = currDate.getTime() - prevDate.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 1) {
       currentStreak++;
@@ -87,7 +96,6 @@ export function calculateLongestStreak(completedDates) {
     } else if (diffDays > 1) {
       currentStreak = 1;
     }
-    // If diffDays === 0, it's a duplicate, skip
   }
   
   return longestStreak;
