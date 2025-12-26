@@ -1,6 +1,13 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 
+// PDF Layout Constants
+const MARGIN = 20;
+const STAT_BOX_HEIGHT = 20;
+const STAT_ROW_HEIGHT = 25;
+const STREAK_ROW_HEIGHT = 25;
+const ACTIVITY_ROW_HEIGHT = 8;
+
 /**
  * Generate a professional PDF report of user's streak data
  */
@@ -8,8 +15,7 @@ export async function generateStreakReport(userProfile, streaks, completionData)
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  let yPosition = margin;
+  let yPosition = MARGIN;
 
   // Helper functions
   const addText = (text, x, y, options = {}) => {
@@ -22,7 +28,7 @@ export async function generateStreakReport(userProfile, streaks, completionData)
 
   const addLine = (y) => {
     doc.setDrawColor(200, 200, 200);
-    doc.line(margin, y, pageWidth - margin, y);
+    doc.line(MARGIN, y, pageWidth - MARGIN, y);
   };
 
   // ========== COVER PAGE ==========
@@ -44,13 +50,13 @@ export async function generateStreakReport(userProfile, streaks, completionData)
   // User info
   yPosition = 100;
   doc.setTextColor(0, 0, 0);
-  addText(`Generated for: ${userProfile?.displayName || userProfile?.email || 'User'}`, margin, yPosition, { fontSize: 14, fontStyle: 'bold' });
+  addText(`Generated for: ${userProfile?.displayName || userProfile?.email || 'User'}`, MARGIN, yPosition, { fontSize: 14, fontStyle: 'bold' });
   yPosition += 10;
-  addText(`Date: ${format(new Date(), 'MMMM d, yyyy')}`, margin, yPosition, { fontSize: 12 });
+  addText(`Date: ${format(new Date(), 'MMMM d, yyyy')}`, MARGIN, yPosition, { fontSize: 12 });
 
   // ========== SUMMARY STATS ==========
   yPosition = 130;
-  addText('📊 Summary Statistics', margin, yPosition, { fontSize: 18, fontStyle: 'bold', color: [255, 102, 0] });
+  addText('📊 Summary Statistics', MARGIN, yPosition, { fontSize: 18, fontStyle: 'bold', color: [255, 102, 0] });
   yPosition += 5;
   addLine(yPosition);
   yPosition += 15;
@@ -74,13 +80,13 @@ export async function generateStreakReport(userProfile, streaks, completionData)
     { label: 'Total Completions', value: totalCompletions.toString(), emoji: '✅' }
   ];
 
-  const colWidth = (pageWidth - 2 * margin) / 2;
+  const colWidth = (pageWidth - 2 * MARGIN) / 2;
   statsData.forEach((stat, index) => {
-    const x = margin + (index % 2) * colWidth;
-    const y = yPosition + Math.floor(index / 2) * 25;
+    const x = MARGIN + (index % 2) * colWidth;
+    const y = yPosition + Math.floor(index / 2) * STAT_ROW_HEIGHT;
     
     doc.setFillColor(245, 245, 245);
-    doc.roundedRect(x, y - 5, colWidth - 10, 20, 3, 3, 'F');
+    doc.roundedRect(x, y - 5, colWidth - 10, STAT_BOX_HEIGHT, 3, 3, 'F');
     
     addText(`${stat.emoji} ${stat.label}:`, x + 5, y + 5, { fontSize: 11 });
     addText(stat.value, x + 5, y + 12, { fontSize: 14, fontStyle: 'bold', color: [255, 102, 0] });
@@ -89,29 +95,29 @@ export async function generateStreakReport(userProfile, streaks, completionData)
   yPosition += 60;
 
   // ========== STREAK DETAILS ==========
-  addText('📋 Streak Details', margin, yPosition, { fontSize: 18, fontStyle: 'bold', color: [255, 102, 0] });
+  addText('📋 Streak Details', MARGIN, yPosition, { fontSize: 18, fontStyle: 'bold', color: [255, 102, 0] });
   yPosition += 5;
   addLine(yPosition);
   yPosition += 10;
 
   if (streaks.length === 0) {
-    addText('No streaks created yet.', margin, yPosition, { fontSize: 12, color: [128, 128, 128] });
+    addText('No streaks created yet.', MARGIN, yPosition, { fontSize: 12, color: [128, 128, 128] });
   } else {
     streaks.forEach((streak, index) => {
       // Check if we need a new page
       if (yPosition > pageHeight - 40) {
         doc.addPage();
-        yPosition = margin;
+        yPosition = MARGIN;
       }
 
       // Streak card
       doc.setFillColor(250, 250, 250);
-      doc.roundedRect(margin, yPosition - 2, pageWidth - 2 * margin, 25, 3, 3, 'F');
+      doc.roundedRect(MARGIN, yPosition - 2, pageWidth - 2 * MARGIN, STREAK_ROW_HEIGHT, 3, 3, 'F');
       
-      addText(`${index + 1}. ${streak.title}`, margin + 5, yPosition + 8, { fontSize: 12, fontStyle: 'bold' });
-      addText(`Current: ${streak.currentStreak} days`, margin + 5, yPosition + 17, { fontSize: 10 });
-      addText(`Best: ${streak.longestStreak || 0} days`, margin + 80, yPosition + 17, { fontSize: 10 });
-      addText(`Total: ${(streak.completedDates || []).length} completions`, margin + 140, yPosition + 17, { fontSize: 10 });
+      addText(`${index + 1}. ${streak.title}`, MARGIN + 5, yPosition + 8, { fontSize: 12, fontStyle: 'bold' });
+      addText(`Current: ${streak.currentStreak} days`, MARGIN + 5, yPosition + 17, { fontSize: 10 });
+      addText(`Best: ${streak.longestStreak || 0} days`, MARGIN + 80, yPosition + 17, { fontSize: 10 });
+      addText(`Total: ${(streak.completedDates || []).length} completions`, MARGIN + 140, yPosition + 17, { fontSize: 10 });
       
       yPosition += 30;
     });
@@ -120,11 +126,11 @@ export async function generateStreakReport(userProfile, streaks, completionData)
   // ========== RECENT ACTIVITY ==========
   if (yPosition > pageHeight - 80) {
     doc.addPage();
-    yPosition = margin;
+    yPosition = MARGIN;
   }
 
   yPosition += 10;
-  addText('📅 Recent Activity (Last 10 Days)', margin, yPosition, { fontSize: 18, fontStyle: 'bold', color: [255, 102, 0] });
+  addText('📅 Recent Activity (Last 10 Days)', MARGIN, yPosition, { fontSize: 18, fontStyle: 'bold', color: [255, 102, 0] });
   yPosition += 5;
   addLine(yPosition);
   yPosition += 10;
@@ -134,17 +140,17 @@ export async function generateStreakReport(userProfile, streaks, completionData)
     .slice(0, 10);
 
   if (sortedDates.length === 0) {
-    addText('No activity recorded yet.', margin, yPosition, { fontSize: 12, color: [128, 128, 128] });
+    addText('No activity recorded yet.', MARGIN, yPosition, { fontSize: 12, color: [128, 128, 128] });
   } else {
     sortedDates.forEach(([date, count]) => {
       if (yPosition > pageHeight - 20) {
         doc.addPage();
-        yPosition = margin;
+        yPosition = MARGIN;
       }
       
-      addText(`• ${date}:`, margin + 5, yPosition, { fontSize: 11 });
-      addText(`${count} completion${count !== 1 ? 's' : ''}`, margin + 50, yPosition, { fontSize: 11, color: [0, 128, 0] });
-      yPosition += 8;
+      addText(`• ${date}:`, MARGIN + 5, yPosition, { fontSize: 11 });
+      addText(`${count} completion${count !== 1 ? 's' : ''}`, MARGIN + 50, yPosition, { fontSize: 11, color: [0, 128, 0] });
+      yPosition += ACTIVITY_ROW_HEIGHT;
     });
   }
 

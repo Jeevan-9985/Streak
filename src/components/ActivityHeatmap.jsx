@@ -157,8 +157,8 @@ export default function ActivityHeatmap({ completionData = {}, onDateClick }) {
             exit={{ opacity: 0, y: 5 }}
             className="fixed z-50 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg pointer-events-none"
             style={{
-              left: tooltipPosition.x,
-              top: tooltipPosition.y - 40,
+              left: Math.max(80, Math.min(tooltipPosition.x, window.innerWidth - 80)),
+              top: tooltipPosition.y < 50 ? tooltipPosition.y + 20 : tooltipPosition.y - 50,
               transform: 'translateX(-50%)'
             }}
           >

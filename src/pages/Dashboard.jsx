@@ -363,7 +363,9 @@ export default function Dashboard() {
                             <div
                               className="bg-orange-500 h-2 rounded-full transition-all duration-500"
                               style={{
-                                width: `${Math.min((streak.currentStreak / (streak.longestStreak || 1)) * 100, 100)}%`
+                                width: streak.longestStreak > 0 
+                                  ? `${Math.min((streak.currentStreak / streak.longestStreak) * 100, 100)}%`
+                                  : streak.currentStreak > 0 ? '100%' : '0%'
                               }}
                             />
                           </div>

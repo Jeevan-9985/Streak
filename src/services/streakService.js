@@ -44,10 +44,12 @@ export function calculateCurrentStreak(completedDates) {
   }
   
   let streak = 1;
-  let startIndex = sortedDates[0] === today ? 0 : -1;
+  // If most recent is today, calculate from today (offset 0)
+  // If most recent is yesterday, calculate from yesterday (offset -1)
+  const dayOffset = sortedDates[0] === today ? 0 : -1;
   
   for (let i = 1; i < sortedDates.length; i++) {
-    const expectedDate = getDateStringDaysAgo(i + startIndex);
+    const expectedDate = getDateStringDaysAgo(i + dayOffset);
     
     if (sortedDates[i] === expectedDate) {
       streak++;

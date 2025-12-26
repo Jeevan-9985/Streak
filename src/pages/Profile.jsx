@@ -115,7 +115,7 @@ export default function Profile() {
     }
   };
 
-  const joinedDate = userProfile?.createdAt?.toDate?.() || new Date();
+  const joinedDate = userProfile?.createdAt?.toDate?.();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -199,9 +199,11 @@ export default function Profile() {
                       {displayName || 'Anonymous User'}
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400 mb-2">{user?.email}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-3">
-                      📅 Joined {format(joinedDate, 'MMMM d, yyyy')}
-                    </p>
+                    {joinedDate && (
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mb-3">
+                        📅 Joined {format(joinedDate, 'MMMM d, yyyy')}
+                      </p>
+                    )}
                     <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
                       <button
                         onClick={() => setEditing(true)}
