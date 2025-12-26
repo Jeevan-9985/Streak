@@ -3,14 +3,13 @@ import {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
-  signOut 
+  signOut,
+  updateProfile
 } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '../services/firebase';
+import { auth, isFirebaseConfigured, resetPassword } from '../services/firebase';
+import { createUserProfile, getUserProfile } from '../services/userService';
 
 const AuthContext = createContext();
-
-const LOCAL_STORAGE_USER_KEY = 'streak_app_user';
-const LOCAL_STORAGE_USERS_KEY = 'streak_app_users';
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -20,109 +19,107 @@ export function useAuth() {
   return context;
 }
 
-// Local storage auth functions for demo mode
-function getLocalUsers() {
-  const users = localStorage.getItem(LOCAL_STORAGE_USERS_KEY);
-  return users ? JSON.parse(users) : {};
-}
-
-function saveLocalUsers(users) {
-  localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(users));
-}
-
-function getLocalUser() {
-  const user = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-  return user ? JSON.parse(user) : null;
-}
-
-function saveLocalUser(user) {
-  if (user) {
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
-  }
-}
-
-// Initialize user state based on mode
-function getInitialUser() {
-  if (!isFirebaseConfigured) {
-    return getLocalUser();
-  }
-  return null;
-}
-
-function getInitialLoading() {
-  // In demo mode, we can load from localStorage immediately
-  return isFirebaseConfigured;
-}
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getInitialUser);
-  const [loading, setLoading] = useState(getInitialLoading);
+  const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  // Initialize loading based on whether Firebase is configured
+  const [loading, setLoading] = useState(isFirebaseConfigured);
 
   useEffect(() => {
-    if (isFirebaseConfigured) {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        setLoading(false);
-      });
-      return unsubscribe;
+    if (!isFirebaseConfigured) {
+      return;
     }
-    // Demo mode: already initialized from localStorage in useState
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      
+      if (firebaseUser) {
+        // Fetch or create user profile in Firestore
+        try {
+          let profile = await getUserProfile(firebaseUser.uid);
+          if (!profile) {
+            await createUserProfile(firebaseUser.uid, {
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || '',
+              photoURL: firebaseUser.photoURL || ''
+            });
+            profile = await getUserProfile(firebaseUser.uid);
+          }
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      } else {
+        setUserProfile(null);
+      }
+      
+      setLoading(false);
+    });
+    
+    return unsubscribe;
   }, []);
 
   const login = async (email, password) => {
-    if (isFirebaseConfigured) {
-      return signInWithEmailAndPassword(auth, email, password);
-    } else {
-      // Demo mode: validate against localStorage
-      const users = getLocalUsers();
-      const user = users[email];
-      if (!user || user.password !== password) {
-        throw { code: 'auth/invalid-credential' };
-      }
-      const userObj = { uid: user.uid, email: user.email };
-      setUser(userObj);
-      saveLocalUser(userObj);
-      return { user: userObj };
+    if (!isFirebaseConfigured) {
+      throw new Error('Firebase is not configured');
     }
+    return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signup = async (email, password) => {
-    if (isFirebaseConfigured) {
-      return createUserWithEmailAndPassword(auth, email, password);
-    } else {
-      // Demo mode: save to localStorage
-      const users = getLocalUsers();
-      if (users[email]) {
-        throw { code: 'auth/email-already-in-use' };
-      }
-      const uid = 'local_' + Date.now();
-      users[email] = { uid, email, password };
-      saveLocalUsers(users);
-      const userObj = { uid, email };
-      setUser(userObj);
-      saveLocalUser(userObj);
-      return { user: userObj };
+  const signup = async (email, password, displayName = '') => {
+    if (!isFirebaseConfigured) {
+      throw new Error('Firebase is not configured');
     }
+    
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Update display name if provided
+    if (displayName) {
+      await updateProfile(result.user, { displayName });
+    }
+    
+    // Create user profile in Firestore
+    await createUserProfile(result.user.uid, {
+      email: result.user.email,
+      displayName: displayName || '',
+      photoURL: ''
+    });
+    
+    return result;
   };
 
   const logout = async () => {
-    if (isFirebaseConfigured) {
-      return signOut(auth);
-    } else {
-      setUser(null);
-      saveLocalUser(null);
+    if (!isFirebaseConfigured) {
+      throw new Error('Firebase is not configured');
+    }
+    // Clear user profile first
+    setUserProfile(null);
+    return signOut(auth);
+  };
+
+  const forgotPassword = async (email) => {
+    if (!isFirebaseConfigured) {
+      throw new Error('Firebase is not configured');
+    }
+    return resetPassword(email);
+  };
+
+  const refreshUserProfile = async () => {
+    if (user) {
+      const profile = await getUserProfile(user.uid);
+      setUserProfile(profile);
     }
   };
 
   const value = {
     user,
+    userProfile,
     loading,
     login,
     signup,
     logout,
-    isDemo: !isFirebaseConfigured
+    forgotPassword,
+    refreshUserProfile
   };
 
   return (
