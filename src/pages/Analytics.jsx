@@ -236,29 +236,33 @@ export default function Analytics() {
               Streak Performance
             </h3>
             <div className="space-y-4">
-              {streaks.map(streak => (
-                <div key={streak.id} className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{streak.title}</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {streak.currentStreak} days
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-orange-500 h-2 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${Math.min((streak.currentStreak / Math.max(streak.longestStreak || 1, 1)) * 100, 100)}%` 
-                        }}
-                      />
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Best: {streak.longestStreak || 0} days • Total: {streak.completedDates?.length || 0} completions
+              {streaks.map(streak => {
+                const progressPercent = Math.min(
+                  (streak.currentStreak / Math.max(streak.longestStreak || 1, 1)) * 100,
+                  100
+                );
+                return (
+                  <div key={streak.id} className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{streak.title}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {streak.currentStreak} days
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Best: {streak.longestStreak || 0} days • Total: {streak.completedDates?.length || 0} completions
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

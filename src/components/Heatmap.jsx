@@ -72,6 +72,8 @@ export default function Heatmap({ completedDates = [], onDateClick }) {
     return monthLabels;
   }, [weeks]);
 
+  const dayLabels = ['Sun', '', 'Tue', '', 'Thu', '', 'Sat'];
+
   return (
     <div className="relative">
       {/* Month labels */}
@@ -90,13 +92,9 @@ export default function Heatmap({ completedDates = [], onDateClick }) {
       <div className="flex mt-6">
         {/* Day labels */}
         <div className="flex flex-col text-xs text-gray-500 dark:text-gray-400 mr-2 justify-between py-0.5">
-          <span className="h-3">Sun</span>
-          <span className="h-3"></span>
-          <span className="h-3">Tue</span>
-          <span className="h-3"></span>
-          <span className="h-3">Thu</span>
-          <span className="h-3"></span>
-          <span className="h-3">Sat</span>
+          {dayLabels.map((label, i) => (
+            <span key={i} className="h-3">{label}</span>
+          ))}
         </div>
 
         {/* Grid */}

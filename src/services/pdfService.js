@@ -50,8 +50,8 @@ export async function generateStreakReport(userData, streaks, completedDates) {
   const totalStreaks = streaks.length;
   const totalCompletions = completedDates.length;
   const activeStreaks = streaks.filter(s => s.currentStreak > 0).length;
-  const longestEver = Math.max(...streaks.map(s => s.longestStreak || 0), 0);
-  const currentLongest = Math.max(...streaks.map(s => s.currentStreak || 0), 0);
+  const longestEver = streaks.reduce((max, s) => Math.max(max, s.longestStreak || 0), 0);
+  const currentLongest = streaks.reduce((max, s) => Math.max(max, s.currentStreak || 0), 0);
 
   // Stats boxes
   const statsData = [

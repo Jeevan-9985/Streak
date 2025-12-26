@@ -180,27 +180,30 @@ export default function CalendarPage() {
             <p className="text-gray-600 dark:text-gray-400">No events scheduled. Click a date to add one!</p>
           ) : (
             <div className="space-y-3">
-              {events
-                .filter(e => e.date >= format(new Date(), 'yyyy-MM-dd'))
-                .sort((a, b) => a.date.localeCompare(b.date))
-                .slice(0, 5)
-                .map(event => (
-                  <div
-                    key={event.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
-                    onClick={() => handleEventClick(event)}
-                  >
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">{event.title}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {format(new Date(event.date + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+              {(() => {
+                const today = format(new Date(), 'yyyy-MM-dd');
+                return events
+                  .filter(e => e.date >= today)
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .slice(0, 5)
+                  .map(event => (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{event.title}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {format(new Date(event.date + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+                        </div>
                       </div>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                ))}
+                  ));
+              })()}
             </div>
           )}
         </div>
