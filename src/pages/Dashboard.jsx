@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { 
@@ -11,6 +12,7 @@ import {
 } from '../services/streakService';
 import StreakCard from '../components/StreakCard';
 import AddStreakModal from '../components/AddStreakModal';
+import { fireStreakConfetti } from '../utils/confetti';
 import toast from 'react-hot-toast';
 
 export default function Dashboard() {
@@ -45,6 +47,8 @@ export default function Dashboard() {
     try {
       await markStreakDone(streak.id, streak.completedDates || []);
       toast.success('Great job! Keep it up! 🔥');
+      // Fire confetti on successful streak completion
+      fireStreakConfetti();
     } catch (error) {
       toast.error(error.message || 'Failed to mark as done');
     }
@@ -111,8 +115,21 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🔥 Streak</h1>
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🔥 Streak</h1>
+            <nav className="flex gap-4">
+              <Link to="/" className="text-sm font-medium text-orange-500">
+                Dashboard
+              </Link>
+              <Link to="/analytics" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+                Analytics
+              </Link>
+              <Link to="/calendar" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+                Calendar
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center gap-4">
             <button
               onClick={toggleDarkMode}
@@ -132,7 +149,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Your Streaks

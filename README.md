@@ -1,35 +1,64 @@
 # 🔥 Streak App
 
-A clean, minimal streak maintenance web application for tracking habits and challenges.
+A production-ready streak maintenance web application for tracking habits and challenges. Built with real-time Firebase backend, featuring analytics, calendar, and PDF exports.
 
 ## 🌐 Live Demo
 
 **[https://jeevan-9985.github.io/Streak/](https://jeevan-9985.github.io/Streak/)**
 
-## Features
+## ✨ Features
 
+### Core Features
 - ✅ Real-time Firebase Authentication (email + password)
 - ✅ Real-time Firestore database for persistent storage
-- ✅ Create and manage streaks (habits/challenges)
+- ✅ Create and manage multiple streaks (habits/challenges)
 - ✅ Manual "Mark Done" button for daily completion
 - ✅ Current streak calculated based on consecutive days
 - ✅ Longest streak tracking (personal best)
 - ✅ Undo today's completion
 - ✅ Streak resets when a day is missed
-- ✅ Light & Dark mode with WCAG-compliant colors
-- ✅ Mobile responsive design
-- ✅ Toast notifications for feedback
 - ✅ Data persists across devices and browsers
 
-## Tech Stack
+### Analytics & Heatmap
+- ✅ GitHub-style 365-day activity heatmap
+- ✅ Color intensity based on daily completions
+- ✅ Hover tooltips showing date and count
+- ✅ Comprehensive statistics dashboard
+- ✅ Weekly and monthly completion tracking
 
-- React + Vite
-- Tailwind CSS
-- Firebase (Authentication & Firestore)
-- React Router
-- React Hot Toast
+### Calendar & Events
+- ✅ Full monthly calendar view
+- ✅ Create, edit, and delete events
+- ✅ Visual completion indicators on calendar
+- ✅ Upcoming events list
+- ✅ Click any date to add events
 
-## Setup
+### PDF Export
+- ✅ Professional PDF reports with cover page
+- ✅ Summary statistics
+- ✅ Streak performance details
+- ✅ Recent activity log
+- ✅ Downloadable report
+
+### UI/UX
+- ✅ Light & Dark mode with WCAG-compliant colors
+- ✅ Confetti animations on streak completion
+- ✅ Mobile responsive design
+- ✅ Toast notifications for feedback
+- ✅ Smooth transitions and hover effects
+
+## 🛠 Tech Stack
+
+- **Frontend:** React 19 + Vite
+- **Styling:** Tailwind CSS 4
+- **Backend:** Firebase (Auth + Firestore)
+- **Routing:** React Router 7
+- **PDF:** jsPDF + jsPDF-AutoTable
+- **Date Handling:** date-fns
+- **Animations:** canvas-confetti
+- **Notifications:** React Hot Toast
+
+## 🚀 Setup
 
 ### 1. Clone the repository
 
@@ -74,9 +103,9 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
-## Deployment
+## 📦 Deployment
 
-The app is configured for automatic deployment to GitHub Pages. To deploy:
+The app is configured for automatic deployment to GitHub Pages:
 
 1. Go to your repository Settings → Pages
 2. Set Source to "GitHub Actions"
@@ -89,13 +118,13 @@ The app is configured for automatic deployment to GitHub Pages. To deploy:
    - `VITE_FIREBASE_APP_ID`
 4. Push to main branch or manually trigger the workflow
 
-## How Streaks Work
+## 🔥 How Streaks Work
 
-A streak is NOT a counter - it's derived from completed dates:
+Based on research of GitHub, Duolingo, LeetCode, and GeeksForGeeks streak systems:
 
 - Each streak stores an array of completed dates (YYYY-MM-DD format)
-- Current streak is calculated by checking consecutive days
-- Streak counts if user completed today OR yesterday (giving time to complete today)
+- Current streak is **derived** from completed dates, not stored
+- Streak counts if user completed today OR yesterday (grace period)
 - Missing more than one day resets the streak to 0
 - Longest streak is tracked separately for personal best
 - Users must manually click "Mark Done" to complete today
@@ -103,23 +132,36 @@ A streak is NOT a counter - it's derived from completed dates:
 - Undo removes today from completed dates (only works for today)
 - All date handling uses local time (timezone-safe)
 
-## Data Model
+## 📊 Data Model
 
 ```
 users (managed by Firebase Auth)
-  id
-  email
+  - id
+  - email
 
 streaks (Firestore collection)
-  id
-  userId
-  title
-  completedDates[]  (array of YYYY-MM-DD strings)
-  createdAt
+  - id
+  - userId
+  - title
+  - completedDates[]  (array of YYYY-MM-DD strings)
+  - createdAt
+
+events (Firestore collection)
+  - id
+  - userId
+  - title
+  - description
+  - date
+  - createdAt
 ```
 
-**Note:** `currentStreak` and `longestStreak` are derived values, not stored.
+## 🚫 What's NOT Included
 
-## License
+- ❌ Demo Mode - Completely removed
+- ❌ localStorage fallbacks - No local data storage for streaks
+- ❌ Test credentials - No fake/demo accounts
+- ❌ Offline-only logic - Requires real backend
+
+## 📄 License
 
 MIT
