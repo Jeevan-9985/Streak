@@ -67,6 +67,7 @@ export default function Login() {
           transition={{ delay: 0.3 }}
           onSubmit={handleSubmit}
           className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg"
+          aria-label="Sign in form"
         >
           <div className="space-y-4">
             <div>
@@ -81,6 +82,8 @@ export default function Login() {
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
                 placeholder="you@example.com"
                 required
+                autoComplete="email"
+                aria-describedby="email-hint"
               />
             </div>
             
@@ -96,6 +99,7 @@ export default function Login() {
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
             </div>
           </div>
