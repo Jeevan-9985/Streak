@@ -7,7 +7,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, firebaseConfigError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -28,6 +28,8 @@ export default function Login() {
         toast.error('Invalid email or password');
       } else if (error.code === 'auth/invalid-email') {
         toast.error('Invalid email address');
+      } else if (error.code === 'auth/configuration-error') {
+        toast.error('Firebase is not configured');
       } else {
         toast.error('Failed to login. Please try again.');
       }
@@ -35,6 +37,34 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // Show configuration error
+  if (firebaseConfigError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Configuration Required
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Firebase is not configured. Please set up your Firebase environment variables to use this application.
+          </p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-left shadow-sm border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-mono">
+              Required environment variables:<br />
+              • VITE_FIREBASE_API_KEY<br />
+              • VITE_FIREBASE_AUTH_DOMAIN<br />
+              • VITE_FIREBASE_PROJECT_ID<br />
+              • VITE_FIREBASE_STORAGE_BUCKET<br />
+              • VITE_FIREBASE_MESSAGING_SENDER_ID<br />
+              • VITE_FIREBASE_APP_ID
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
@@ -44,7 +74,7 @@ export default function Login() {
           <p className="mt-2 text-gray-600 dark:text-gray-400">Sign in to track your habits</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -55,7 +85,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
                 placeholder="you@example.com"
                 required
               />
@@ -70,7 +100,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
                 placeholder="••••••••"
                 required
               />
@@ -80,7 +110,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold rounded-lg transition duration-200 flex items-center justify-center"
+            className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 dark:disabled:bg-orange-400/50 text-white font-semibold rounded-lg transition duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
           >
             {loading ? (
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">

@@ -8,15 +8,18 @@ A clean, minimal streak maintenance web application for tracking habits and chal
 
 ## Features
 
-- ✅ User authentication (email + password)
+- ✅ Real-time Firebase Authentication (email + password)
+- ✅ Real-time Firestore database for persistent storage
 - ✅ Create and manage streaks (habits/challenges)
 - ✅ Manual "Mark Done" button for daily completion
-- ✅ Automatic streak calculation based on consecutive days
+- ✅ Current streak calculated based on consecutive days
+- ✅ Longest streak tracking (personal best)
 - ✅ Undo today's completion
 - ✅ Streak resets when a day is missed
-- ✅ Light & Dark mode
+- ✅ Light & Dark mode with WCAG-compliant colors
 - ✅ Mobile responsive design
 - ✅ Toast notifications for feedback
+- ✅ Data persists across devices and browsers
 
 ## Tech Stack
 
@@ -41,7 +44,9 @@ cd Streak
 npm install
 ```
 
-### 3. Configure Firebase
+### 3. Configure Firebase (Required)
+
+This app requires Firebase configuration. It will NOT work without proper Firebase credentials.
 
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
 2. Enable Email/Password authentication in the Authentication section
@@ -89,12 +94,31 @@ The app is configured for automatic deployment to GitHub Pages. To deploy:
 A streak is NOT a counter - it's derived from completed dates:
 
 - Each streak stores an array of completed dates (YYYY-MM-DD format)
-- Current streak is calculated by checking consecutive days ending today
-- Missing a day resets the streak to 0
+- Current streak is calculated by checking consecutive days
+- Streak counts if user completed today OR yesterday (giving time to complete today)
+- Missing more than one day resets the streak to 0
+- Longest streak is tracked separately for personal best
 - Users must manually click "Mark Done" to complete today
 - Double completion for the same date is prevented
-- Undo removes today from completed dates and recalculates the streak
-- All date handling uses local time (no UTC bugs)
+- Undo removes today from completed dates (only works for today)
+- All date handling uses local time (timezone-safe)
+
+## Data Model
+
+```
+users (managed by Firebase Auth)
+  id
+  email
+
+streaks (Firestore collection)
+  id
+  userId
+  title
+  completedDates[]  (array of YYYY-MM-DD strings)
+  createdAt
+```
+
+**Note:** `currentStreak` and `longestStreak` are derived values, not stored.
 
 ## License
 
