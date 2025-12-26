@@ -9,20 +9,9 @@ import {
   onSnapshot,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase';
+import { db, firebaseConfigError } from './firebase';
 
 const COLLECTION_NAME = 'streaks';
-const LOCAL_STORAGE_STREAKS_KEY = 'streak_app_streaks';
-
-// Local storage helpers
-function getLocalStreaks() {
-  const streaks = localStorage.getItem(LOCAL_STORAGE_STREAKS_KEY);
-  return streaks ? JSON.parse(streaks) : [];
-}
-
-function saveLocalStreaks(streaks) {
-  localStorage.setItem(LOCAL_STORAGE_STREAKS_KEY, JSON.stringify(streaks));
-}
 
 export function getLocalDateString() {
   const now = new Date();
@@ -30,32 +19,6 @@ export function getLocalDateString() {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
-}
-
-export function calculateCurrentStreak(completedDates) {
-  if (!completedDates || completedDates.length === 0) return 0;
-  
-  const sortedDates = [...completedDates].sort().reverse();
-  const today = getLocalDateString();
-  
-  if (sortedDates[0] !== today) {
-    return 0;
-  }
-  
-  let streak = 1;
-  
-  for (let i = 1; i < sortedDates.length; i++) {
-    // Calculate expected previous date by subtracting days from today
-    const expectedDate = getDateStringDaysAgo(i);
-    
-    if (sortedDates[i] === expectedDate) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  
-  return streak;
 }
 
 function getDateStringDaysAgo(daysAgo) {
@@ -67,72 +30,121 @@ function getDateStringDaysAgo(daysAgo) {
   return `${year}-${month}-${day}`;
 }
 
-export function subscribeToStreaks(userId, callback) {
-  if (isFirebaseConfigured) {
-    const q = query(
-      collection(db, COLLECTION_NAME), 
-      where('userId', '==', userId)
+export function calculateCurrentStreak(completedDates) {
+  if (!completedDates || completedDates.length === 0) return 0;
+  
+  const sortedDates = [...completedDates].sort().reverse();
+  const today = getLocalDateString();
+  const yesterday = getDateStringDaysAgo(1);
+  
+  // Streak is active if user completed today OR yesterday
+  // If user missed today but completed yesterday, streak is still active (they have until end of today)
+  const mostRecentDate = sortedDates[0];
+  
+  if (mostRecentDate !== today && mostRecentDate !== yesterday) {
+    // Last completion was more than 1 day ago - streak is broken
+    return 0;
+  }
+  
+  let streak = 1;
+  
+  for (let i = 1; i < sortedDates.length; i++) {
+    // Calculate the expected previous date
+    const prevExpectedDate = getDateStringDaysAgo(
+      mostRecentDate === today 
+        ? i 
+        : i + 1 // offset by 1 if starting from yesterday
     );
     
-    return onSnapshot(q, (snapshot) => {
-      const streaks = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        currentStreak: calculateCurrentStreak(doc.data().completedDates)
-      }));
-      callback(streaks);
-    });
-  } else {
-    // Demo mode: use localStorage
-    const streaks = getLocalStreaks()
-      .filter(s => s.userId === userId)
-      .map(s => ({
-        ...s,
-        currentStreak: calculateCurrentStreak(s.completedDates)
-      }));
-    callback(streaks);
-    
-    // Return a function to trigger updates (for localStorage mode)
-    const intervalId = setInterval(() => {
-      const updatedStreaks = getLocalStreaks()
-        .filter(s => s.userId === userId)
-        .map(s => ({
-          ...s,
-          currentStreak: calculateCurrentStreak(s.completedDates)
-        }));
-      callback(updatedStreaks);
-    }, 500);
-    
-    return () => clearInterval(intervalId);
+    if (sortedDates[i] === prevExpectedDate) {
+      streak++;
+    } else {
+      break;
+    }
   }
+  
+  return streak;
+}
+
+export function calculateLongestStreak(completedDates) {
+  if (!completedDates || completedDates.length === 0) return 0;
+  
+  // Remove duplicates and sort
+  const uniqueDates = [...new Set(completedDates)].sort();
+  
+  if (uniqueDates.length === 0) return 0;
+  if (uniqueDates.length === 1) return 1;
+  
+  let longestStreak = 1;
+  let currentStreak = 1;
+  
+  for (let i = 1; i < uniqueDates.length; i++) {
+    // Parse dates as local dates (YYYY-MM-DD format)
+    const [prevYear, prevMonth, prevDay] = uniqueDates[i - 1].split('-').map(Number);
+    const [currYear, currMonth, currDay] = uniqueDates[i].split('-').map(Number);
+    
+    const prevDate = new Date(prevYear, prevMonth - 1, prevDay);
+    const currDate = new Date(currYear, currMonth - 1, currDay);
+    
+    // Calculate difference in days using UTC to avoid DST issues
+    const diffTime = currDate.getTime() - prevDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      currentStreak++;
+      longestStreak = Math.max(longestStreak, currentStreak);
+    } else if (diffDays > 1) {
+      currentStreak = 1;
+    }
+  }
+  
+  return longestStreak;
+}
+
+export function subscribeToStreaks(userId, callback) {
+  if (firebaseConfigError || !db) {
+    callback([]);
+    return () => {};
+  }
+  
+  const q = query(
+    collection(db, COLLECTION_NAME), 
+    where('userId', '==', userId)
+  );
+  
+  return onSnapshot(q, (snapshot) => {
+    const streaks = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      currentStreak: calculateCurrentStreak(doc.data().completedDates),
+      longestStreak: calculateLongestStreak(doc.data().completedDates)
+    }));
+    callback(streaks);
+  }, (error) => {
+    console.error('Error fetching streaks:', error);
+    callback([]);
+  });
 }
 
 export async function createStreak(userId, title) {
-  if (isFirebaseConfigured) {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-      userId,
-      title,
-      completedDates: [],
-      createdAt: serverTimestamp()
-    });
-    return docRef.id;
-  } else {
-    // Demo mode: save to localStorage
-    const streaks = getLocalStreaks();
-    const id = 'local_' + Date.now();
-    streaks.push({
-      id,
-      userId,
-      title,
-      completedDates: [],
-      createdAt: new Date().toISOString()
-    });
-    saveLocalStreaks(streaks);
-    return id;
+  if (firebaseConfigError || !db) {
+    throw new Error('Firebase is not configured');
   }
+  
+  const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+    userId,
+    title,
+    completedDates: [],
+    createdAt: serverTimestamp()
+  });
+  return docRef.id;
 }
 
 export async function markStreakDone(streakId, completedDates) {
+  if (firebaseConfigError || !db) {
+    throw new Error('Firebase is not configured');
+  }
+  
   const today = getLocalDateString();
   
   if (completedDates.includes(today)) {
@@ -141,22 +153,16 @@ export async function markStreakDone(streakId, completedDates) {
   
   const newDates = [...completedDates, today];
   
-  if (isFirebaseConfigured) {
-    await updateDoc(doc(db, COLLECTION_NAME, streakId), {
-      completedDates: newDates
-    });
-  } else {
-    // Demo mode: update localStorage
-    const streaks = getLocalStreaks();
-    const index = streaks.findIndex(s => s.id === streakId);
-    if (index !== -1) {
-      streaks[index].completedDates = newDates;
-      saveLocalStreaks(streaks);
-    }
-  }
+  await updateDoc(doc(db, COLLECTION_NAME, streakId), {
+    completedDates: newDates
+  });
 }
 
 export async function undoStreakDone(streakId, completedDates) {
+  if (firebaseConfigError || !db) {
+    throw new Error('Firebase is not configured');
+  }
+  
   const today = getLocalDateString();
   
   if (!completedDates.includes(today)) {
@@ -165,30 +171,17 @@ export async function undoStreakDone(streakId, completedDates) {
   
   const newDates = completedDates.filter(date => date !== today);
   
-  if (isFirebaseConfigured) {
-    await updateDoc(doc(db, COLLECTION_NAME, streakId), {
-      completedDates: newDates
-    });
-  } else {
-    // Demo mode: update localStorage
-    const streaks = getLocalStreaks();
-    const index = streaks.findIndex(s => s.id === streakId);
-    if (index !== -1) {
-      streaks[index].completedDates = newDates;
-      saveLocalStreaks(streaks);
-    }
-  }
+  await updateDoc(doc(db, COLLECTION_NAME, streakId), {
+    completedDates: newDates
+  });
 }
 
 export async function deleteStreak(streakId) {
-  if (isFirebaseConfigured) {
-    await deleteDoc(doc(db, COLLECTION_NAME, streakId));
-  } else {
-    // Demo mode: remove from localStorage
-    const streaks = getLocalStreaks();
-    const filtered = streaks.filter(s => s.id !== streakId);
-    saveLocalStreaks(filtered);
+  if (firebaseConfigError || !db) {
+    throw new Error('Firebase is not configured');
   }
+  
+  await deleteDoc(doc(db, COLLECTION_NAME, streakId));
 }
 
 export function isCompletedToday(completedDates) {

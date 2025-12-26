@@ -11,21 +11,25 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Check if Firebase is configured (has valid credentials)
-export const isFirebaseConfigured = Boolean(
+// Validate Firebase configuration - all required fields must be present
+const isValidConfig = Boolean(
   firebaseConfig.apiKey && 
   firebaseConfig.projectId && 
-  !firebaseConfig.apiKey.includes('your_')
+  firebaseConfig.authDomain &&
+  !firebaseConfig.apiKey.includes('your_') &&
+  !firebaseConfig.projectId.includes('your_')
 );
 
-let app = null;
-let auth = null;
-let db = null;
-
-if (isFirebaseConfigured) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
+if (!isValidConfig) {
+  console.error('Firebase configuration is missing or invalid. Please set up your Firebase environment variables.');
 }
+
+// Initialize Firebase - throws error if config is invalid
+const app = isValidConfig ? initializeApp(firebaseConfig) : null;
+const auth = isValidConfig ? getAuth(app) : null;
+const db = isValidConfig ? getFirestore(app) : null;
+
+// Export configuration status for error display
+export const firebaseConfigError = !isValidConfig;
 
 export { auth, db };

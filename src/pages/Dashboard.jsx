@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { 
@@ -11,10 +12,11 @@ import {
 } from '../services/streakService';
 import StreakCard from '../components/StreakCard';
 import AddStreakModal from '../components/AddStreakModal';
+import { fireStreakConfetti } from '../utils/confetti';
 import toast from 'react-hot-toast';
 
 export default function Dashboard() {
-  const { user, logout, isDemo } = useAuth();
+  const { user, logout, firebaseConfigError } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const [streaks, setStreaks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +47,8 @@ export default function Dashboard() {
     try {
       await markStreakDone(streak.id, streak.completedDates || []);
       toast.success('Great job! Keep it up! 🔥');
+      // Fire confetti on successful streak completion
+      fireStreakConfetti();
     } catch (error) {
       toast.error(error.message || 'Failed to mark as done');
     }
@@ -79,30 +83,64 @@ export default function Dashboard() {
     }
   };
 
+  // Show error if Firebase is not configured
+  if (firebaseConfigError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Configuration Error
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Firebase is not configured. Please set up your Firebase environment variables to use this application.
+          </p>
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 text-left">
+            <p className="text-sm text-gray-700 dark:text-gray-300 font-mono">
+              Required environment variables:<br />
+              • VITE_FIREBASE_API_KEY<br />
+              • VITE_FIREBASE_AUTH_DOMAIN<br />
+              • VITE_FIREBASE_PROJECT_ID<br />
+              • VITE_FIREBASE_STORAGE_BUCKET<br />
+              • VITE_FIREBASE_MESSAGING_SENDER_ID<br />
+              • VITE_FIREBASE_APP_ID
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      {/* Demo Mode Banner */}
-      {isDemo && (
-        <div className="bg-yellow-500 text-yellow-900 text-center py-2 px-4 text-sm font-medium">
-          📦 Demo Mode - Data stored locally in your browser
-        </div>
-      )}
-
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🔥 Streak</h1>
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🔥 Streak</h1>
+            <nav className="flex gap-4">
+              <Link to="/" className="text-sm font-medium text-orange-500">
+                Dashboard
+              </Link>
+              <Link to="/analytics" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+                Analytics
+              </Link>
+              <Link to="/calendar" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+                Calendar
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center gap-4">
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
               aria-label="Toggle dark mode"
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
             >
               Logout
             </button>
@@ -111,14 +149,14 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Your Streaks
           </h2>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition"
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition shadow-sm hover:shadow-md"
           >
             + Add Streak
           </button>
@@ -132,9 +170,9 @@ export default function Dashboard() {
             </svg>
           </div>
         ) : streaks.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-2">
+            <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">
               No streaks yet
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -142,7 +180,7 @@ export default function Dashboard() {
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition"
+              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition shadow-sm hover:shadow-md"
             >
               Create Your First Streak
             </button>

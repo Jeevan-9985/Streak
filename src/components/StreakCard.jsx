@@ -1,8 +1,8 @@
 export default function StreakCard({ streak, isCompletedToday, onMarkDone, onUndo, onDelete }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all hover:shadow-lg">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all hover:shadow-md">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 break-words pr-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 break-words pr-2">
           {streak.title}
         </h3>
         <button
@@ -16,27 +16,34 @@ export default function StreakCard({ streak, isCompletedToday, onMarkDone, onUnd
         </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-2">
         <span className="text-4xl font-bold text-orange-500">
           {streak.currentStreak}
         </span>
-        <span className="text-gray-600 dark:text-gray-400">
+        <span className="text-gray-700 dark:text-gray-300">
           day{streak.currentStreak !== 1 ? 's' : ''} 🔥
         </span>
       </div>
+
+      {/* Longest streak display */}
+      {streak.longestStreak > 0 && (
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Best: {streak.longestStreak} day{streak.longestStreak !== 1 ? 's' : ''} 🏆
+        </div>
+      )}
 
       <div className="flex gap-2">
         {isCompletedToday ? (
           <>
             <button
               disabled
-              className="flex-1 py-2 px-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium rounded-lg cursor-not-allowed"
+              className="flex-1 py-2 px-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium rounded-lg cursor-not-allowed border border-green-200 dark:border-green-800"
             >
               ✓ Done Today
             </button>
             <button
               onClick={onUndo}
-              className="py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+              className="py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition border border-gray-200 dark:border-gray-600"
             >
               Undo
             </button>
@@ -44,7 +51,7 @@ export default function StreakCard({ streak, isCompletedToday, onMarkDone, onUnd
         ) : (
           <button
             onClick={onMarkDone}
-            className="flex-1 py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition"
+            className="flex-1 py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition shadow-sm hover:shadow-md"
           >
             Mark Done
           </button>
